@@ -1,0 +1,54 @@
+data segment
+	bcd db 16h
+	bin db ?
+data ends
+
+my_stack segment stack
+	dw 20 dup(0)
+    stack_top LABEL WORD
+my_stack ends
+
+code segment 
+	assume cs:code,ds:data,ss:my_stack
+
+start:
+    MOV AX,data
+	MOV DS,AX
+	    
+    MOV AX,my_stack
+	MOV SS,AX
+	MOV SP,OFFSET stack_top
+	   
+	MOV AX,0
+	MOV AL,bcd
+	CALL convert
+	   
+	MOV AX,4c00h
+	INT 21H
+	   
+convert PROC NEAR
+	   
+        PUSHF
+        PUSH AX
+        PUSH BX
+        PUSH CX
+        
+        MOV BL,AL
+        AND BL,0FH     ->6
+        AND AL,0F0H    ->1
+        SHR AL,04H
+        MOV BH,0AH
+        MUL BH
+        ADD AL,BL
+        MOV BIN,AL
+        
+        POP CX
+        POP BX
+        POP AX
+        POPF
+	RET
+
+convert ENDP
+
+code ENDS
+end start
